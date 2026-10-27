@@ -1,96 +1,63 @@
-import java.awt.*;
 import java.util.Scanner;
 
+/**
+ * MosaicsCreator is the control center for all the programs
+ * it sets everything up, interacts with the user, and activates the different programs.
+ */
 public class MosaicsCreator {
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Welcome to Mosaic Creator!");
+        System.out.println("Welcome to Mosaic Creator Studio!");
         System.out.print("How many rows do you want in your mosaic? ");
         int rows = scanner.nextInt();
         System.out.print("How many columns do you want in your mosaic? ");
         int cols = scanner.nextInt();
         scanner.nextLine();
 
-        Mosaics.open(rows, cols, 40, 40);
+        System.out.println("\nChoose your mosaic shape style:");
+        System.out.println("  1. Rectangles");
+        System.out.println("  2. Circles");
+        System.out.println("  3. Rounded Rectangles");
+        System.out.println("  4. Diamonds");
+        System.out.print("Select shape option (1-4): ");
+        int shapeChoice = scanner.nextInt();
+        scanner.nextLine();
 
-        int currCol = 0;
-        int currRow = 0;
-        String choice = "";
-
-        System.out.println("Here is the color code: ");
-        System.out.printf("%-11s %-11s %-11s %s\n%-11s %-11s %-11s %s\n", "r: red", "c: cyan", "y: yellow", "w: white", "g: green", "b: blue", "m: magenta", "other characters or blank: black");
-
-        while(Mosaics.isOpen() && currRow < rows) {
-            if(currCol == 0) {
-                System.out.print("Row #" + (currRow + 1) + "? ");
-                choice = scanner.nextLine();
-            }
-            Mosaics.setColor(currRow, currCol, returnGridColor(choice, currCol));
-            currCol++;
-            if(currCol >= cols) {
-                currCol = 0;
-                currRow++;
-            }
-        }
-
-        while(Mosaics.isOpen()) {
-            Mosaics.delay(1000);
-            currCol = 0;
-            currRow = 0;
-            for(currRow = 0; currRow < rows; currRow++) {
-                for(currCol = 0; currCol < cols; currCol++) {
-                    Color currColor = Mosaics.getColor(currRow, currCol);                    
-                    Color rotatedColor = rotateColor(currColor);
-                    Mosaics.setColor(currRow, currCol, rotatedColor);
-                }
-            }
-        }
-        scanner.close();
-    }
-
-    private static Color returnGridColor(String choice, int i) {
-        if(choice == null || i < 0 || i >= choice.length()) {
-            return Color.BLACK;
-        }
-
-        char ch = Character.toLowerCase(choice.charAt(i));
-        return switch (ch) {
-            case 'r' -> Color.RED;
-            case 'g' -> Color.GREEN;
-            case 'b' -> Color.BLUE;
-            case 'y' -> Color.YELLOW;
-            case 'c' -> Color.CYAN;
-            case 'm' -> Color.MAGENTA;
-            case 'w' -> Color.WHITE;
-            default -> Color.BLACK;
+        String chosenShape = switch (shapeChoice) {
+            case 2 -> MosaicsPanel.SHAPE_CIRCLE;
+            case 3 -> MosaicsPanel.SHAPE_ROUND_RECT;
+            case 4 -> MosaicsPanel.SHAPE_DIAMOND;
+            default -> MosaicsPanel.SHAPE_RECT;
         };
-    }
 
-    private static Color rotateColor(Color color) {
-        if(color.equals(Color.RED)) {
-            return Color.CYAN;
+        // 3. Program Mode Selection Menu
+        System.out.println("\nChoose execution mode:");
+        System.out.println("  1. Manual Row Coloring & Infinite Animation");
+        System.out.println("  2. Game of Life Simulation");
+        System.out.println("  3. Wave & Ripple Generator");
+        System.out.println("  4. Particle & Firework Simulation");
+        System.out.print("Select mode (1-4): ");
+        int modeChoice = scanner.nextInt();
+        scanner.nextLine();
+
+        if (modeChoice == 2 && (rows < 10 || cols < 10)) {
+            System.out.println("Note: Small grid selected for Game of Life. Expanding to minimum (15x15) for stable simulation.");
+            rows = Math.max(rows, 15);
+            cols = Math.max(cols, 15);
         }
-        else if(color.equals(Color.CYAN)) {
-            return Color.YELLOW;
+
+        Mosaics.open(rows, cols, 40, 40);
+        Mosaics.setShapeType(chosenShape);
+
+        switch (modeChoice) {
+            case 2 -> GameOfLifeEngine.runSimulation(rows, cols, 150);
+            case 3 -> WaveEngine.runSimulation(rows, cols, 50);
+            case 4 -> ParticleEngine.runSimulation(rows, cols, 60);
+            default -> ManualArtEngine.runSimulation(rows, cols, scanner);
         }
-        else if(color.equals(Color.YELLOW)) {
-            return Color.WHITE;
-        }
-        else if(color.equals(Color.WHITE)) {
-            return Color.GREEN;
-        }
-        else if(color.equals(Color.GREEN)) {
-            return Color.BLUE;
-        }
-        else if(color.equals(Color.BLUE)) {
-            return Color.MAGENTA;
-        }
-        else if(color.equals(Color.MAGENTA)) {
-            return Color.BLACK;
-        }
-        else {
-            return Color.RED;
-        }
+
+        scanner.close();
     }
 }

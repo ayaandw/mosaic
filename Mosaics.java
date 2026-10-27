@@ -1,4 +1,6 @@
 import java.awt.*;
+import java.awt.image.BufferedImage;
+
 import javax.swing.*;
 
 public class Mosaics {
@@ -28,6 +30,7 @@ public class Mosaics {
             canvas.setGroutingColor(null);
             canvas.setUse3D(false);
         }
+        window = new JFrame("Mosaics Editor Window");
         window = new JFrame("Mosaic Window");
         window.setContentPane(canvas);
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -43,7 +46,7 @@ public class Mosaics {
                 h = screen.height - 100;
             }
             window.setSize(w, h);
-        }
+        }        
         window.setLocation((screen.width - window.getWidth()) / 2, (screen.height - window.getHeight()) / 2);
         window.setVisible(true);
     }
@@ -145,7 +148,22 @@ public class Mosaics {
         }
     }
 
+    public static void setShapeType(String shapeType) {
+        if(canvas != null) {
+            canvas.setShapeType(shapeType);
+        }
+    }
+
     public boolean getUse3DEffect() {
         return use3DEffect;
+    }
+
+    public static void exportImage(String fileName) {
+        if (canvas != null) {
+            BufferedImage img = canvas.getImage();
+            MosaicExporter.saveMosaic(img, fileName);
+        } else {
+            System.out.println("Mosaic window is not open.");
+        }
     }
 }

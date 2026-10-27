@@ -1,4 +1,3 @@
-
 import java.awt.*;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
@@ -11,7 +10,7 @@ import java.awt.image.BufferedImage;
  *  optionally be drawn as raised 3D-style rectangles.  Methods are 
  *  provided for getting and setting the colors of the rectangles.
  */
-public class MosaicsPanel extends JPanel {
+public class MosaicsPanel extends JPanel implements java.awt.event.MouseListener, java.awt.event.MouseMotionListener, java.awt.event.KeyListener {
 
 
     //------------------ private instance variables --------------------
@@ -31,6 +30,13 @@ public class MosaicsPanel extends JPanel {
                                     //       flat rects are used to draw the rectangles.
     private boolean autopaint = true;  // If true, then when a square's color is set, 
                                        //     repaint is called automatically.
+    
+    public static final String SHAPE_RECT = "RECT";
+    public static final String SHAPE_CIRCLE = "CIRCLE";
+    public static final String SHAPE_ROUND_RECT = "ROUND_RECT";
+    public static final String SHAPE_DIAMOND = "DIAMOND";
+    private String currentShape = SHAPE_RECT;
+    
     private Color[][] grid; // An array that contains the rectangles' colors.
                             //   If a null occurs in this array, the rectangle
                             //   is drawn in the default color, and "grouting"
@@ -123,8 +129,12 @@ public class MosaicsPanel extends JPanel {
             borderWidth = 0;
         if (preferredBlockWidth > 0 && preferredBlockHeight > 0)
             setPreferredSize(new Dimension(preferredBlockWidth*columns + 2*borderWidth, preferredBlockHeight*rows + 2*borderWidth));
+            addMouseListener(this);
+            addMouseMotionListener(this);
+            addKeyListener(this);
+            setFocusable(true);
+            requestFocusInWindow();
     }
-
 
     //--------- methods for getting and setting grid properties ----------
 
@@ -217,6 +227,16 @@ public class MosaicsPanel extends JPanel {
         return alwaysDrawGrouting; 
     }
 
+    public void setShapeType(String shapeType) {
+        if (shapeType != null) {
+            this.currentShape = shapeType;
+            forceRedraw();
+        }
+    }
+
+    public String getShapeType() {
+        return currentShape;
+    }
 
     /**
      *  Set the number of rows and columns in the grid.  If the value of
@@ -644,22 +664,76 @@ public class MosaicsPanel extends JPanel {
         Color c = grid[row][col];
         OSG.setColor( (c == null)? defaultColor : c );
         if (groutingColor == null || (c == null && !alwaysDrawGrouting)) {
-            if (!use3D || c == null)
-                OSG.fillRect(x,y,w,h);
-            else
-                OSG.fill3DRect(x,y,w,h,true);
-        }
-        else {
-            if (!use3D || c == null)
-                OSG.fillRect(x+1,y+1,w-2,h-2);
-            else
-                OSG.fill3DRect(x+1,y+1,w-2,h-2,true);
+            OSG.fillRect(x, y, w, h);
             OSG.setColor(groutingColor);
-            OSG.drawRect(x,y,w-1,h-1);
+            OSG.drawRect(x, y, w - 1, h - 1);
+            OSG.setColor((c == null) ? defaultColor : c);
+            x += 1; y += 1; w -= 2; h -= 2;
         }
+        
+        switch (currentShape) {
+            case SHAPE_CIRCLE:
+                OSG.fillOval(x, y, w, h);
+                break;
+            case SHAPE_ROUND_RECT:
+                OSG.fillRoundRect(x, y, w, h, w / 3, h / 3);
+                break;
+            case SHAPE_DIAMOND:
+                int[] xPoints = {x + w / 2, x + w, x + w / 2, x};
+                int[] yPoints = {y, y + h / 2, y + h, y + h / 2};
+                OSG.fillPolygon(xPoints, yPoints, 4);
+                break;
+            default:
+                if (!use3D || c == null) {
+                    OSG.fillRect(x, y, w, h);
+                }
+                else {
+                    OSG.fill3DRect(x, y, w, h, true);
+                }
+                break;
+        }
+
         if (callRepaint)
             repaint(x,y,w,h);
     }
+    private Color activePaintColor = Color.RED;
 
+    public void setActivePaintColor(Color c) {
+        this.activePaintColor = (c != null) ? c : Color.RED;
+    }
 
+    @Override
+    public void mousePressed(java.awt.event.MouseEvent e) {
+        handleMouseDraw(e.getX(), e.getY());
+    }
+
+    @Override
+    public void mouseDragged(java.awt.event.MouseEvent e) {
+        handleMouseDraw(e.getX(), e.getY());
+    }
+
+    private void handleMouseDraw(int x, int y) {
+        int col = xCoordToColumnNumber(x);
+        int row = yCoordToRowNumber(y);
+        if (row >= 0 && row < rows && col >= 0 && col < columns) {
+            setColor(row, col, activePaintColor);
+        }
+    }
+
+    @Override
+    public void keyPressed(java.awt.event.KeyEvent e) {
+        // S to take a screenshot
+        if(e.getKeyChar() == 's' || e.getKeyChar() == 'S') {
+            String fileName = "mosaic_snapshot_" + System.currentTimeMillis() + ".png";
+            MosaicExporter.saveMosaic(getImage(), fileName);
+        }
+    }
+
+    @Override public void mouseClicked(java.awt.event.MouseEvent e) {}
+    @Override public void mouseReleased(java.awt.event.MouseEvent e) {}
+    @Override public void mouseEntered(java.awt.event.MouseEvent e) {}
+    @Override public void mouseExited(java.awt.event.MouseEvent e) {}
+    @Override public void mouseMoved(java.awt.event.MouseEvent e) {}
+    @Override public void keyTyped(java.awt.event.KeyEvent e) {}
+    @Override public void keyReleased(java.awt.event.KeyEvent e) {}
 } // end class MosaicPanel
