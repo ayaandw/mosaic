@@ -7,6 +7,11 @@ Files `Mosaics.java` and `MosaicsCreator.java` were given by my teacher, but wer
 ---
 
 ## Must know!
+* **How to Download** *
+   * Go to https://ayaand.itch.io/mosaic
+   * Download zipped file, extract
+   * Run MosaicsStudio.exe
+
 * **Controls:**
     * Press S to save a screenshot of any window
     * Click and drag anywhere to color cells for the frame
@@ -16,12 +21,6 @@ Files `Mosaics.java` and `MosaicsCreator.java` were given by my teacher, but wer
     * Specify mosaic grid dimensions
     * Choose unit shape
     * Choose execution mode (make sure to try them all!)
-
-
-1. Compile and run the control center:
-  Navigate to the folder in which you downloaded
-   javac *.java
-   java MosaicsCreator
 
 ---
 
